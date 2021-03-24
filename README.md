@@ -16,7 +16,7 @@ docker run -d -p 80:80 $appName
 
 # MongoDB* connection 
 
-Credentials are stored inside ```./private.py``` (make this file before running anything).
+Credentials are stored inside ```./app/private.py``` (make this file before running anything).
 
 ```
 mongo_details = {
