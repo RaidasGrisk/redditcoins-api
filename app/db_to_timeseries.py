@@ -47,9 +47,10 @@ async def get_timeseries_df(
                 {'data.created_utc': {'$gte': start}},
                 {'data.created_utc': {'$lte': end}},
                 {'data.ups': {'$gte': ups}},
-                # TODO: think of a way to properly combine these two opts
-                {'data.title': {'$exists': True if submissions else False}},
-                {'data.parent_id': {'$exists': True if comments else False}},
+                {'$or': [
+                    {'data.title': {'$exists': True if submissions else False}},
+                    {'data.parent_id': {'$exists': True if comments else False}},
+                ]}
             ]}
         },
         {
@@ -64,20 +65,32 @@ async def get_timeseries_df(
 
     # convert to DataFrame to be able to
     # simply group by specified granularity
-    df = pd.DataFrame([i async for i in cur]).set_index('_id')
-    # granularity options: 'Y', 'M', 'W', 'D', 'H', '5H', 'min', '30min', etc
-    df_ = df.groupby(pd.Grouper(freq=granularity)).sum()
+    df = pd.DataFrame([i async for i in cur])
 
-    # modify index attributes
-    # by default index values are datetime64[ns]
-    # upon conversion to json (pd.to_json)
-    # these values are converted to timestamps: int
-    # to prevent this, lets cast these values to str
-    df_.index = df_.index.astype(str)
+    # lets switch if for any reason
+    # (wrong subreddit / ticker / data)
+    # the dataframe with db docs is empty.
+    # this prevents the app from crashing
+    # because some methods below cannot be
+    # executed on empty pandas object
+    if len(df) == 0:
+        print('empty')
+        df_ = pd.Series()
+    else:
+        df = df.set_index('_id')
+        # granularity options: 'Y', 'M', 'W', 'D', 'H', '5H', 'min', '30min', etc
+        df_ = df.groupby(pd.Grouper(freq=granularity)).sum()
 
-    # when aggregating the index key must be set to _id
-    # after aggregation rename it to time for later use
-    df_.index = df_.index.rename('time')
+        # modify index attributes
+        # by default index values are datetime64[ns]
+        # upon conversion to json (pd.to_json)
+        # these values are converted to timestamps: int
+        # to prevent this, lets cast these values to str
+        df_.index = df_.index.astype(str)
+
+        # when aggregating the index key must be set to _id
+        # after aggregation rename it to time for later use
+        df_.index = df_.index.rename('time')
 
     return df_
 
