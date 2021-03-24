@@ -6,13 +6,12 @@ from fastapi import FastAPI, Query, Path
 from pydantic import BaseModel
 from typing import List, Optional
 
-from app.db_to_timeseries import get_timeseries_df
-from other_ops.topics import main as get_topics
+from db_to_timeseries import get_timeseries_df
 
 # ok we need to parse ticker names and validate
 # that provided ticker is indeed valid and exists in db
 # TODO: this is too long and rendered docs are fucked
-valid_tickers = '|'.join(list(get_topics().keys()) + ['None'])
+valid_tickers = '|'.join(['TSLA', 'GOOGL'] + ['None'])
 
 # valid granularity values
 # TODO: this is not a complete list but lets keep
@@ -23,7 +22,7 @@ granularities = ['Y', 'M', 'W', 'D', 'H', '6H', '2H']
 valid_granularity = '|'.join(granularities)
 
 # valid subreddits
-subreddits = ['wallstreetbets']
+subreddits = ['wallstreetbets', 'satoshistreetbets']
 valid_subreddits = '|'.join(subreddits)
 
 
@@ -100,6 +99,7 @@ async def vol(
         # of total subs during a period. This info is way
         # more valuable in ML models than raw counts NVDA_vol.
         ticker=None if ticker == 'NONE' else ticker,
+        subreddit=subreddit,
         start=start,
         end=end,
         ups=ups,
