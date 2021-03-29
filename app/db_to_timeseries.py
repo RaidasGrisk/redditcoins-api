@@ -43,7 +43,7 @@ async def get_timeseries_df(
     cur = db_client.reddit[subreddit].aggregate([
         {
             '$match': {'$and': [
-                {'metadata.topics.direct': {'$in': [ticker]}} if ticker else {},
+                {'metadata.topics': {'$in': [ticker]}} if ticker else {},
                 {'data.created_utc': {'$gte': start}},
                 {'data.created_utc': {'$lte': end}},
                 {'data.ups': {'$gte': ups}},
