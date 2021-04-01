@@ -29,10 +29,10 @@ gcloud run deploy --image gcr.io/$projectName/$appName --platform managed --regi
 Credentials are stored inside ```./app/private.py``` (make this file before running anything).
 
 ```
-mongo_details = {
+db_details = {
     'host': '0.0.0.0',
     'port': 27017,
-    'username': 'admin',
+    'user': 'admin',
     'password': 'pass',
 }
 ```
