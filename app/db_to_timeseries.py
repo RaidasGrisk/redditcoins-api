@@ -6,12 +6,29 @@ TODO:
 
 '''
 
-from private import mongo_details
-import motor.motor_asyncio
+from private import db_details
+import asyncpg
 import pandas as pd
 import time
 import asyncio
 from typing import Union
+
+# define granularity mapping from
+# FastAPI input to timescaledb
+# define this in outer scope so
+# can import into other modules
+gran_ = {
+    # 'M': '1 minutes',
+    # 'M5': '5 minutes',
+    # 'M15': '15 minutes',
+    # 'M30': '30 minutes',
+    'H': '1 hours',
+    '2H': '2 hours',
+    '6H': '6 hours',
+    '12H': '12 hours',
+    'D': '1 days',
+    'W': '1 week'
+}
 
 
 def date_string_to_timestamp(s: str) -> int:
@@ -31,135 +48,92 @@ async def get_timeseries_df(
         granularity: str
 ) -> pd.Series:
 
-    # db connection
-    db_client = motor.motor_asyncio.AsyncIOMotorClient(**mongo_details)
-
-    # cast str dates to ts as in db
-    start = date_string_to_timestamp(start)
-    end = date_string_to_timestamp(end)
-
-    # agg. very likely can be improved
-    # serves just as temp solution
-    cur = db_client.reddit[subreddit].aggregate([
-        {
-            '$match': {'$and': [
-                {'metadata.topics': {'$in': [ticker]}} if ticker else {},
-                {'data.created_utc': {'$gte': start}},
-                {'data.created_utc': {'$lte': end}},
-                {'data.ups': {'$gte': ups}},
-                {'$or': [
-                    {'data.title': {'$exists': True if submissions else False}},
-                    {'data.parent_id': {'$exists': True if comments else False}},
-                ]}
-            ]}
-        },
-        {
-            '$group': {
-                # double timestamp to date:
-                # https://medium.com/idomongodb/mongodb-unix-timestamp-to-isodate-67741ab32078
-                '_id': {'$toDate': {'$multiply': ['$data.created_utc', 1000]}},
-                'volume': {'$sum': 1}
+    # IMPORTANT!
+    # There are two possible queries.
+    # One fetching number of submissions /
+    # comments with specific ticker topic.
+    # One fetching total number of submissions /
+    # comments irrespective of topic. So two queries.
+    if ticker:
+        sql = f"""
+            SELECT 
+                time_bucket_gapfill('{gran_[granularity]}', created_time) AS tb, 
+                COUNT(*)
+            FROM {subreddit + '_'}
+            WHERE UPS > {ups}
+            AND topic = '{ticker}'
+            {
+                '' if comments and submissions else 
+                'AND is_comment = true' if comments else 
+                'AND is_comment = false' if submissions else ''
             }
-        }
-    ])
-
-    # convert to DataFrame to be able to
-    # simply group by specified granularity
-    df = pd.DataFrame([i async for i in cur])
-
-    # lets switch if for any reason
-    # (wrong subreddit / ticker / data)
-    # the dataframe with db docs is empty.
-    # this prevents the app from crashing
-    # because some methods below cannot be
-    # executed on empty pandas object
-    if len(df) == 0:
-        print('empty')
-        df_ = pd.Series()
+            AND created_time >= '{start}'
+            AND created_time < '{end}'
+            GROUP BY tb
+            ORDER BY tb DESC
+            """
     else:
-        df = df.set_index('_id')
-        # granularity options: 'Y', 'M', 'W', 'D', 'H', '5H', 'min', '30min', etc
-        df_ = df.groupby(pd.Grouper(freq=granularity)).sum()
+        # this is massively overcomplicated :/
+        # but with current db structure, cant think
+        # of a better approach. Pretty sure there is none.
+        sql = f"""
+            SELECT 
+                time_bucket_gapfill(
+                '{gran_[granularity]}', 
+                to_timestamp(created_utc),
+                '{start}',
+                '{end}'
+                ) AS tb, 
+                COUNT(*)
+            FROM {subreddit}
+            WHERE UPS > {ups}
+            {
+                '' if comments and submissions else 
+                'AND num_comments IS NULL' if comments else 
+                'AND num_comments IS NOT NULL' if submissions else ''
+            }
+            AND to_timestamp(created_utc) >= '{start}'
+            AND to_timestamp(created_utc) < '{end}'
+            GROUP BY tb
+            ORDER BY tb DESC
+            """
+
+    # fetch data
+    conn = await asyncpg.connect(**db_details, database='reddit')
+    async with conn.transaction():
+        data = await conn.fetch(sql)
+        df = pd.Series(dict(data))
 
         # modify index attributes
         # by default index values are datetime64[ns]
         # upon conversion to json (pd.to_json)
         # these values are converted to timestamps: int
         # to prevent this, lets cast these values to str
-        df_.index = df_.index.astype(str)
+        df.index = df.index.astype(str)
 
-        # when aggregating the index key must be set to _id
-        # after aggregation rename it to time for later use
-        df_.index = df_.index.rename('time')
+        # for some reason the count values are floats
+        # we want it to be ints, also how about null
+        # values? Filling it with 0's seems reasonable.
+        df = df.fillna(0).astype(int)
 
-    return df_
+        # rename both index and series values
+        df.index = df.index.rename('time')
+        df.name = 'volume'
+
+    return df
 
 
 def test() -> None:
 
     df = asyncio.run(get_timeseries_df(
-        subreddit='wallstreetbets',
-        ticker='GME',
-        start='2017-03-01',
-        end='2021-03-20',
-        ups=10,
-        submissions=False,
+        subreddit='satoshistreetbets',
+        ticker='ETH',
+        start='2021-01-28',
+        end='2021-04-02',
+        ups=0,
+        submissions=True,
         comments=True,
-        granularity='1H'
+        granularity='D'
     ))
 
-    print(df.reset_index().to_dict(orient='records'))
-
-
-'''
-Other filter options to try out to improve speed
-
-[
-    {  # match specific fields
-        '$match': {'$and': [
-            {'data.ups': {'$gte': 10}},
-            {'data.title': {'$exists': True}},
-            {'metadata.topics.direct': {'$in': ['crypto']}}
-        ]}
-    },
-    {'$project': {
-        # double timestamp to date:
-        # https://medium.com/idomongodb/mongodb-unix-timestamp-to-isodate-67741ab32078
-       'date': {'date': {'$toDate': {'$multiply': ['$data.created_utc', 1000]}}}
-    }},
-    {  # group by
-        '$group': {
-            '_id': {
-                'year': {'$year': '$date.date'},
-                'month': {'$month': '$date.date'},
-                'day': {'$dayOfMonth': '$date.date'},
-                'hour': {'$hour': '$date.date'},
-                'minute': {'$minute': '$date.date'}
-            },
-            'total': {'$sum': 1}
-        }
-    }
-]
-
-
-[
-    {  # match specific fields
-        '$match': {'$and': [
-            {'data.ups': {'$gte': 10}},
-            {'data.title': {'$exists': True}},
-            {'metadata.topics.direct': {'$in': ['crypto']}}
-        ]}
-    },
-    {  # group by
-        '$group': {
-            '_id': {
-                "$subtract": [
-                    '$data.created_utc',
-                    {'$mod': ['$data.created_utc', 1000 * 60 * 60]}
-                ]
-            },
-            'total': {'$sum': 1}
-        }
-    }
-]
-'''
+    [print(i) for i in df.reset_index().to_dict(orient='records')]

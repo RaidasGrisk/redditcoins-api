@@ -13,6 +13,16 @@ docker build --tag $appName -f Dockerfile .
 docker run -d -p 80:80 $appName
 ```
 
+Deploy on google cloud run
+```
+appName='reddit-ticker-api'
+projectName='reddit-app-308612'
+docker build --tag gcr.io/$projectName/$appName -f Dockerfile .
+docker push gcr.io/$projectName/$appName
+gcloud config set project $projectName
+gcloud run deploy --image gcr.io/$projectName/$appName --platform managed --region europe-north1 --max-instances 2
+```
+
 
 # MongoDB* connection 
 

@@ -6,36 +6,61 @@ from fastapi import FastAPI, Query, Path
 from pydantic import BaseModel
 from typing import List, Optional
 
-from db_to_timeseries import get_timeseries_df
+from db_to_timeseries import get_timeseries_df, gran_
 
 # ok we need to parse ticker names and validate
 # that provided ticker is indeed valid and exists in db
 # TODO: this is too long and rendered docs are fucked
 valid_tickers = '|'.join(['TSLA', 'GOOGL'] + ['None'])
 
-# valid granularity values
-# TODO: this is not a complete list but lets keep
-#  it short and simple for now. Not sure if this
-#  impacts the response speed. Most likely the biggest
-#  bottleneck is mongo query agg time. Fix that.
-granularities = ['Y', 'M', 'W', 'D', 'H', '6H', '2H']
-valid_granularity = '|'.join(granularities)
+# list of tickers of corresponding subreddit
+subreddits_and_tickers = {
+    'wallstreetbets': ['TSLA', 'GOOGL', 'GME'] + ['NONE'],
+    'satoshistreetbets': ['ETH', 'ADA', 'BTC'] + ['NONE']
+}
+tickers = [
+    ticker for subreddit in subreddits_and_tickers.values() for ticker in subreddit
+]
 
 # valid subreddits
 subreddits = ['wallstreetbets', 'satoshistreetbets']
 valid_subreddits = '|'.join(subreddits)
 
+tags_metadata = [
+    {
+        "name": "info",
+        "description": "Get all subreddits and corresponding tickers",
+    },
+    {
+        "name": "volume",
+        "description": "Get mention volume",
+    },
+    {
+        'name': 'sentiment',
+        'description': 'upcoming'
+    }
+]
+
 
 app = FastAPI(
-    title='Ticker data from Reddit',
+    title='Reddit ticker',
     description='Get ticker mention counts / sentiment from reddit subs',
-    version='0.0.1'
+    version='0.0.1',
+    openapi_tags=tags_metadata
 )
 
 
-@app.get('/')
+@app.get('/', tags=['info'])
 def ping():
     return {'message': 'Hey there!'}
+
+
+@app.get('/subs_and_tickers', tags=['info'])
+def get_subs_and_tickers():
+    return {
+        'info': 'keys are subreddits, values are valid tickers',
+        'data': subreddits_and_tickers
+    }
 
 
 # the output data model example and validator
@@ -46,22 +71,23 @@ class DataModelOut(BaseModel):
     ]
 
 
-@app.get('/volume/{subreddit}/{ticker}', response_model=DataModelOut)
+@app.get('/volume/{subreddit}/{ticker}', response_model=DataModelOut, tags=['volume'])
 async def vol(
         ticker: str = Path(
             ...,
             title='ticker',
-            description='The name of the ticker e.g. NVDA, TSLA, GME. <br><br>'
+            description='Name of the ticker, e.g ETH, TSLA. '
+                        '<a href=./subs_and_tickers target="_blank">Check this for more</a>.<br><br>'
                         'There is a special case: when ticker is set to NONE <br>'
                         'total number of submissions / comments is returned <br>'
                         'irrespective of ticker mentions. Useful for data scaling.',
-            # regex=f'({valid_tickers})',
+            # regex=f'{"|".join(tickers)}',
             include_in_schema=False
         ),
         subreddit: str = Path(
             'wallstreetbets',
             description='The subreddit to fetch data from',
-            regex=f'{valid_subreddits}'
+            regex=f'{"|".join(subreddits_and_tickers.keys())}'
         ),
         start: str = Query(
             ...,
@@ -72,7 +98,7 @@ async def vol(
             description='The end of the time range to fetch data for, e.g. 2021-02-01'
         ),
         ups: Optional[int] = Query(
-            10,
+            0,
             description='Include subs/comments with more than specified number of ups'
         ),
         submissions: bool = Query(
@@ -80,13 +106,13 @@ async def vol(
             description='Include submissions'
         ),
         comments: bool = Query(
-            False,
+            True,
             description='Include comments'
         ),
         granularity: str = Query(
             'D',
             description='Granularity of the data fetched',
-            regex=f'({valid_granularity})',
+            regex=f'({"|".join(gran_.keys())})',
         )
 ) -> dict:
     print(subreddit)
@@ -113,6 +139,6 @@ async def vol(
     }
 
 
-@app.get('/sentiment/{subreddit}/{ticker}')
+@app.get('/sentiment/{subreddit}/{ticker}', tags=['sentiment'])
 async def sentiment():
     pass
