@@ -99,6 +99,14 @@ async def get_timeseries_df(
             """
 
     # fetch data
+    # TODO: as per docs, it is recommended to use
+    #  connection pool. Current implementation does
+    #  not follow that pattern. Hence small time penalty.
+    #  https://magicstack.github.io/asyncpg/current/usage.html#connection-pools
+    #  to implement this, the db connection object
+    #  has to be created together with fastapi app.
+    #  The connection object should then be passed
+    #  to this function to do the rest.
     conn = await asyncpg.connect(**db_details, database='reddit')
     async with conn.transaction():
         data = await conn.fetch(sql)
@@ -119,6 +127,8 @@ async def get_timeseries_df(
         # rename both index and series values
         df.index = df.index.rename('time')
         df.name = 'volume'
+
+    await conn.close()
 
     return df
 
