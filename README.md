@@ -10,7 +10,7 @@ Build and run FastAPI server in docker container
 ```
 appName='reddit-ticker-api'
 docker build --tag $appName -f Dockerfile .
-docker run -d -p 80:80 $appName
+docker run --network="host" -d -p 80:80 $appName
 ```
 
 Deploy on google cloud run
