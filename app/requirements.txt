@@ -2,6 +2,6 @@ fastapi
 uvicorn
 pandas
 asyncio
-# asyncpg
+asyncpg
 sqlalchemy
 databases
