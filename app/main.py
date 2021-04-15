@@ -5,8 +5,9 @@ https://pydantic-docs.helpmanual.io/usage/schema/#schema-customization
 from fastapi import FastAPI, Query, Path
 from pydantic import BaseModel
 from typing import List, Optional
+from database import database
 
-from db_to_timeseries import get_timeseries_df, gran_
+from db_interactions import get_mention_timeseries, gran_
 
 # ok we need to parse ticker names and validate
 # that provided ticker is indeed valid and exists in db
@@ -37,7 +38,7 @@ tags_metadata = [
     },
     {
         'name': 'sentiment',
-        'description': 'upcoming'
+        'description': 'Upcoming'
     }
 ]
 
@@ -48,6 +49,16 @@ app = FastAPI(
     version='0.0.1',
     openapi_tags=tags_metadata
 )
+
+@app.on_event("startup")
+async def startup():
+    await database.connect()
+
+
+@app.on_event("shutdown")
+async def shutdown():
+    await database.disconnect()
+
 
 
 @app.get('/', tags=['info'])
@@ -115,8 +126,8 @@ async def vol(
             regex=f'({"|".join(gran_.keys())})',
         )
 ) -> dict:
-    print(subreddit)
-    df = await get_timeseries_df(
+
+    df = await get_mention_timeseries(
         # okay, why do we need this NONE thing?
         # the thing is, we want to be able to get the
         # volume of all the tickers combined together.
@@ -131,7 +142,8 @@ async def vol(
         ups=ups,
         submissions=submissions,
         comments=comments,
-        granularity=granularity
+        granularity=granularity,
+        database=database
     )
 
     return {

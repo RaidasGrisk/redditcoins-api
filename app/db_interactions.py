@@ -6,12 +6,11 @@ TODO:
 
 '''
 
-from private import db_details
-import asyncpg
 import pandas as pd
 import time
 import asyncio
 from typing import Union
+import databases
 
 # define granularity mapping from
 # FastAPI input to timescaledb
@@ -37,7 +36,7 @@ def date_string_to_timestamp(s: str) -> int:
     return int(time.mktime(tuple))
 
 
-async def get_timeseries_df(
+async def get_mention_timeseries(
         subreddit: str,
         ticker: Union[str, None],
         start: str,
@@ -45,7 +44,8 @@ async def get_timeseries_df(
         ups: int,
         submissions: bool,
         comments: bool,
-        granularity: str
+        granularity: str,
+        database: databases.core.Database,
 ) -> pd.Series:
 
     # IMPORTANT!
@@ -99,51 +99,58 @@ async def get_timeseries_df(
             """
 
     # fetch data
-    # TODO: as per docs, it is recommended to use
-    #  connection pool. Current implementation does
-    #  not follow that pattern. Hence small time penalty.
-    #  https://magicstack.github.io/asyncpg/current/usage.html#connection-pools
-    #  to implement this, the db connection object
-    #  has to be created together with fastapi app.
-    #  The connection object should then be passed
-    #  to this function to do the rest.
-    conn = await asyncpg.connect(**db_details, database='reddit')
-    async with conn.transaction():
-        data = await conn.fetch(sql)
-        df = pd.Series(dict(data))
+    data = await database.fetch_all(sql)
+    # the db returns an object that looks like this:
+    # [{'tb': datetime.datetime(2021, 4, 1, 0, 0), 'count': 5}, ...]
+    # no way to convert it to Series instead of DataFrame!?
+    # So have to do squeeze() DF into Series
+    df = pd.DataFrame(data)
+    df = df.set_index('tb')
+    df = df.squeeze()
 
-        # modify index attributes
-        # by default index values are datetime64[ns]
-        # upon conversion to json (pd.to_json)
-        # these values are converted to timestamps: int
-        # to prevent this, lets cast these values to str
-        df.index = df.index.astype(str)
+    # modify index attributes
+    # by default index values are datetime64[ns]
+    # upon conversion to json (pd.to_json)
+    # these values are converted to timestamps: int
+    # to prevent this, lets cast these values to str
+    df.index = df.index.astype(str)
 
-        # for some reason the count values are floats
-        # we want it to be ints, also how about null
-        # values? Filling it with 0's seems reasonable.
-        df = df.fillna(0).astype(int)
+    # for some reason the count values are floats
+    # we want it to be ints, also how about null
+    # values? Filling it with 0's seems reasonable.
+    df = df.fillna(0).astype(int)
 
-        # rename both index and series values
-        df.index = df.index.rename('time')
-        df.name = 'volume'
-
-    await conn.close()
+    # rename both index and series values
+    # this seems pointless at this point
+    # but is important when converting Series
+    # to dictionary and finally json object
+    df.index = df.index.rename('time')
+    df.name = 'volume'
 
     return df
 
 
 def test() -> None:
 
-    df = asyncio.run(get_timeseries_df(
-        subreddit='satoshistreetbets',
-        ticker='ETH',
-        start='2021-01-28',
-        end='2021-04-02',
-        ups=0,
-        submissions=True,
-        comments=True,
-        granularity='D'
-    ))
+    from database import database
+
+    async def fetch_data():
+
+        await database.connect()
+        df = await get_mention_timeseries(
+            subreddit='satoshistreetbets',
+            ticker='ETH',
+            start='2021-01-28',
+            end='2021-04-02',
+            ups=0,
+            submissions=True,
+            comments=True,
+            granularity='D',
+            database=database
+        )
+        await database.disconnect()
+        return df
+
+    df = asyncio.run(fetch_data())
 
     [print(i) for i in df.reset_index().to_dict(orient='records')]
