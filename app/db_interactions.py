@@ -54,6 +54,12 @@ async def get_mention_timeseries(
     # comments with specific ticker topic.
     # One fetching total number of submissions /
     # comments irrespective of topic. So two queries.
+
+    # two rows are not very intuitive:
+    # (1) AND created_time <= 2021-04-01 + INTERVAL '1 days'
+    # (2) OFFSET 1 ROWS
+    # if (1) is not done, than the value of 2021-04-01 is null
+    # if (2) is not done then 2021-04-02 with value of null is returned
     if ticker:
         sql = f"""
             SELECT 
@@ -68,9 +74,10 @@ async def get_mention_timeseries(
                 'AND is_comment = false' if submissions else ''
             }
             AND created_time >= '{start}'
-            AND created_time <= '{end}'
+            AND created_time <= date('{end}') + INTERVAL '{gran_[granularity]}'
             GROUP BY tb
             ORDER BY tb DESC
+            OFFSET 1 ROWS
             """
     else:
         # this is massively overcomplicated :/
@@ -93,13 +100,21 @@ async def get_mention_timeseries(
                 'AND num_comments IS NOT NULL' if submissions else ''
             }
             AND to_timestamp(created_utc) >= '{start}'
-            AND to_timestamp(created_utc) <= '{end}'
+            AND to_timestamp(created_utc) <= date('{end}') + INTERVAL '{gran_[granularity]}'
             GROUP BY tb
             ORDER BY tb DESC
             """
 
     # fetch data
     data = await database.fetch_all(sql)
+
+    # if db returned nothing return empty Series
+    # this might happen if for example bad query
+    # params, say start >= end time. Without this
+    # the script below fails to set_index etc.
+    if len(data) == 0:
+        return pd.Series([])
+
     # the db returns an object that looks like this:
     # [{'tb': datetime.datetime(2021, 4, 1, 0, 0), 'count': 5}, ...]
     # no way to convert it to Series instead of DataFrame!?
