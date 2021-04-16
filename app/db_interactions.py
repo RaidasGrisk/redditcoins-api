@@ -68,7 +68,7 @@ async def get_mention_timeseries(
                 'AND is_comment = false' if submissions else ''
             }
             AND created_time >= '{start}'
-            AND created_time < '{end}'
+            AND created_time <= '{end}'
             GROUP BY tb
             ORDER BY tb DESC
             """
@@ -93,7 +93,7 @@ async def get_mention_timeseries(
                 'AND num_comments IS NOT NULL' if submissions else ''
             }
             AND to_timestamp(created_utc) >= '{start}'
-            AND to_timestamp(created_utc) < '{end}'
+            AND to_timestamp(created_utc) <= '{end}'
             GROUP BY tb
             ORDER BY tb DESC
             """
