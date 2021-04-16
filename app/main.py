@@ -7,6 +7,7 @@ from pydantic import BaseModel
 from typing import List, Optional
 from database import database
 from db_interactions import get_mention_timeseries, gran_
+import json
 
 coins = [
     'ALGO', 'DASH', 'OXT', 'ATOM', 'KNC', 'XRP', 'REP',
@@ -46,6 +47,7 @@ app = FastAPI(
     version='0.0.1',
     openapi_tags=tags_metadata
 )
+
 
 @app.on_event("startup")
 async def startup():
@@ -120,6 +122,15 @@ async def vol(
         )
 ) -> dict:
 
+    # TODO: add a limit to date range so that
+    #  no mare than X data-points are queried
+    #  to limit the load on db.
+    #  for example if:
+    #  start=2021-04-01 end=2021-04-10 granularity=H
+    #  then data-points = 10 * 24 = 240
+    #  so limit this to say 200 by shifting end
+    #  to earlier date / shifting start to later
+
     df = await get_mention_timeseries(
         # okay, why do we need this NONE thing?
         # the thing is, we want to be able to get the
@@ -142,6 +153,16 @@ async def vol(
     return {
         'data': df.reset_index().to_dict(orient='records')
     }
+
+
+# this endpoint is purely to decrease the load
+# on db and have a ready to output summary for web
+# for details see make_web_data.py
+@app.get('/volume/market_summary', tags=['volume'])
+async def volume_market_summary():
+    with open('../web_summary.json') as json_file:
+        data = json.load(json_file)
+    return data
 
 
 @app.get('/sentiment/{subreddit}/{coin}', tags=['sentiment'])

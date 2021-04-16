@@ -2,6 +2,7 @@ FROM tiangolo/uvicorn-gunicorn-fastapi:python3.8
 
 COPY ./app /app
 RUN pip install -r requirements.txt
+RUN python3 make_web_data.py &
 
 # --- manual deployment ---
 #FROM python:3.8-slim
