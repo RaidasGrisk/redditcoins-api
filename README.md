@@ -24,16 +24,16 @@ gcloud run deploy --image gcr.io/$projectName/$appName --platform managed --regi
 ```
 
 
-# MongoDB* connection 
+# DB connection 
 
 Credentials are stored inside ```./app/private.py``` (make this file before running anything).
 
 ```
 db_details = {
     'host': '0.0.0.0',
-    'port': 27017,
+    'port': 5432,
     'user': 'admin',
-    'password': 'pass',
+    'password': 'temp-pass',
 }
 ```
 
