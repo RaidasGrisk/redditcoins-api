@@ -40,6 +40,9 @@ if __name__ == '__main__':
     # init api client
     client = TestClient(app)
 
+    # run on init
+    make_web_data(client)
+
     # every start of an hour
     # run the function
     # if not start of an hour

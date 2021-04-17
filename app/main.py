@@ -160,7 +160,7 @@ async def vol(
 # for details see make_web_data.py
 @app.get('/volume/market_summary', tags=['volume'])
 async def volume_market_summary():
-    with open('../web_summary.json') as json_file:
+    with open('web_summary.json') as json_file:
         data = json.load(json_file)
     return data
 
