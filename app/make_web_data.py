@@ -44,9 +44,10 @@ if __name__ == '__main__':
     try:
         make_web_data(client)
     except Exception as e:
-        with open('web_summary.json', 'w') as fp:
-            json.dump({'exception': 'data is not parsed'}, fp)
         print(e)
+        with open('web_summary.json', 'w') as fp:
+            json.dump({'info': 'data not ready'}, fp)
+
 
     # every start of an hour
     # run the function
@@ -55,9 +56,6 @@ if __name__ == '__main__':
     while True:
         t = time.strftime('%M')
         if int(t) == 0:
-            try:
-                make_web_data(client)
-            except Exception as e:
-                print(e)
+            make_web_data(client)
             print(time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()))
         time.sleep(59)

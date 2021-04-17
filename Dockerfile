@@ -2,13 +2,8 @@ FROM tiangolo/uvicorn-gunicorn-fastapi:python3.8
 
 COPY ./app /app
 RUN pip install -r requirements.txt
-RUN python3 make_web_data.py &
 
-# --- manual deployment ---
-#FROM python:3.8-slim
-#
-#COPY ./app /app
-#RUN pip install -r app/requirements.txt
-#
-#EXPOSE 80
-#CMD uvicorn app.main:app --host 0.0.0.0 --port 80
+# making this background py script run was way too hard
+# lets not run this as a background tas or as cron
+# simply add it to prestart.sh
+RUN echo "python3 /app/make_web_data.py &" >> prestart.sh
