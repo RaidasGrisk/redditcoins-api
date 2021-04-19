@@ -3,6 +3,7 @@ https://pydantic-docs.helpmanual.io/usage/schema/#schema-customization
 '''
 
 from fastapi import FastAPI, Query, Path
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Optional
 from database import database
@@ -46,6 +47,16 @@ app = FastAPI(
     description='Get coin mention counts / sentiment from reddit subs',
     version='0.0.1',
     openapi_tags=tags_metadata
+)
+
+# this to let comunicate with
+# vuejs dev server from localhost
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=['*'],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
