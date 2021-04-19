@@ -7,7 +7,7 @@ import time
 
 def make_web_data(client) -> None:
 
-    start = datetime.datetime.now() - datetime.timedelta(days=14)
+    start = datetime.datetime.now() - datetime.timedelta(hours=24)
     end = datetime.datetime.now()
     params = {
         'start': start.strftime("%Y-%m-%d"),
@@ -15,7 +15,7 @@ def make_web_data(client) -> None:
         'ups': 0,
         'submissions': True,
         'comments': True,
-        'granularity': 'D'
+        'granularity': 'H'
     }
 
     output = {}
