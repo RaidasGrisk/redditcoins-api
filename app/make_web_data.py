@@ -7,11 +7,11 @@ import time
 
 def make_web_data(client) -> None:
 
-    start = datetime.datetime.now() - datetime.timedelta(hours=24)
-    end = datetime.datetime.now()
+    start = datetime.datetime.utcnow() - datetime.timedelta(hours=24)
+    end = datetime.datetime.utcnow()
     params = {
-        'start': start.strftime("%Y-%m-%d"),
-        'end': end.strftime("%Y-%m-%d"),
+        'start': start.strftime("%Y-%m-%d %H:%M:%S"),
+        'end': end.strftime("%Y-%m-%d %H:%M:%S"),
         'ups': 0,
         'submissions': True,
         'comments': True,
