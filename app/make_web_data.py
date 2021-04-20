@@ -52,7 +52,8 @@ if __name__ == '__main__':
         with open('web_summary.json', 'w') as fp:
             json.dump({'info': 'data not ready'}, fp)
 
-
+    # TODO: while loop is a waste of compute power
+    #  must move this to cron inside the docker
     # every start of an hour
     # run the function
     # if not start of an hour
