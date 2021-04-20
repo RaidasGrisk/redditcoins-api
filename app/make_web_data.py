@@ -7,8 +7,12 @@ import time
 
 def make_web_data(client) -> None:
 
-    start = datetime.datetime.utcnow() - datetime.timedelta(hours=24)
-    end = datetime.datetime.utcnow()
+    # lets shift one hour back because
+    # the data of the current hour is not yet complete
+    shift = datetime.timedelta(hours=1)
+    start = datetime.datetime.utcnow() - datetime.timedelta(hours=24) - shift
+    end = datetime.datetime.utcnow() - shift
+
     params = {
         'start': start.strftime("%Y-%m-%d %H:%M:%S"),
         'end': end.strftime("%Y-%m-%d %H:%M:%S"),
