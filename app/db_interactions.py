@@ -74,7 +74,7 @@ async def get_mention_timeseries(
                 'AND is_comment = false' if submissions else ''
             }
             AND created_time >= '{start}'
-            AND created_time <= date('{end}') + INTERVAL '{gran_[granularity]}'
+            AND created_time <= TIMESTAMP '{end}' + INTERVAL '{gran_[granularity]}'
             GROUP BY tb
             ORDER BY tb DESC
             OFFSET 1 ROWS
@@ -100,7 +100,7 @@ async def get_mention_timeseries(
                 'AND num_comments IS NOT NULL' if submissions else ''
             }
             AND to_timestamp(created_utc) >= '{start}'
-            AND to_timestamp(created_utc) <= date('{end}') + INTERVAL '{gran_[granularity]}'
+            AND to_timestamp(created_utc) <= TIMESTAMP '{end}' + INTERVAL '{gran_[granularity]}'
             GROUP BY tb
             ORDER BY tb DESC
             """
