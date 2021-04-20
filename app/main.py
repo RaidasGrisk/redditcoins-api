@@ -11,14 +11,14 @@ from db_interactions import get_mention_timeseries, gran_
 import json
 
 coins = [
-    'ALGO', 'DASH', 'OXT', 'ATOM', 'KNC', 'XRP', 'REP',
-    'MKR', 'CGLD', 'COMP', 'NMR', 'OMG', 'BAND', 'UMA',
-    'XLM', 'EOS', 'ZRX', 'BAT', 'LOOM', 'UNI', 'YFI',
-    'LRC', 'CVC', 'DNT', 'MANA', 'GNT', 'REN', 'LINK',
-    'BTC', 'BAL', 'LTC', 'ETH', 'BCH', 'ETC', 'USDC', 'ZEC',
-    'XTZ', 'DAI', 'WBTC', 'NU', 'FIL', 'AAVE', 'SNX', 'BNT',
-    'GRT', 'SUSHI', 'MATIC', 'ADA', 'ANKR', 'CRV', 'STORJ',
-    'SKL', '1INCH', 'ENJ', 'NKN', 'OGN'
+    'ALGO', 'DASH', 'OXT', 'ATOM', 'KNC', 'XRP', 'REP', 'MKR', 'CGLD',
+    'COMP', 'NMR', 'OMG', 'BAND', 'UMA', 'XLM', 'EOS', 'ZRX', 'BAT',
+    'LOOM', 'UNI', 'YFI', 'LRC', 'CVC', 'DNT', 'MANA', 'GNT', 'REN',
+    'LINK', 'BTC', 'BAL', 'LTC', 'ETH', 'BCH', 'ETC', 'USDC', 'ZEC',
+    'XTZ', 'DAI', 'WBTC', 'NU', 'FIL', 'AAVE', 'SNX', 'BNT', 'GRT',
+    'SUSHI', 'MATIC', 'ADA', 'ANKR', 'CRV', 'STORJ', 'SKL', '1INCH',
+    'ENJ', 'NKN', 'OGN', 'DOGE', 'DOT', 'NEO', 'CEL', 'NANO',
+    'XMR', 'USDT', 'BNB', 'NEM', 'TRON', 'BTG', 'VET',
 ]
 
 db_metadata = {
