@@ -7,13 +7,18 @@ import time
 
 def make_web_data(client) -> None:
 
+    # Lets make two files: web_data_hourly and web_data_daily
+    # First will store hourly, second daily data.
+    # TODO: refactor this into two separate functions
+    #  put this in cron to run every hour / day instead of while loop
+
     # lets shift one hour back because
     # the data of the current hour is not yet complete
     shift = datetime.timedelta(hours=1)
     start = datetime.datetime.utcnow() - datetime.timedelta(hours=24) - shift
     end = datetime.datetime.utcnow() - shift
 
-    params = {
+    params_hourly = {
         'start': start.strftime("%Y-%m-%d %H:%M:%S"),
         'end': end.strftime("%Y-%m-%d %H:%M:%S"),
         'ups': 0,
@@ -22,21 +27,39 @@ def make_web_data(client) -> None:
         'granularity': 'H'
     }
 
-    output = {}
-    with client:
-        subs_and_coins = client.get('/subs_and_coins').json()
-        for subreddit in subs_and_coins['subreddits']:
-            output[subreddit] = {}
-            for coin in subs_and_coins['coins']:
-                output[subreddit][coin] = {}
-                resp = client.get(
-                    f'/volume/{subreddit}/{coin}',
-                    params=params
-                ).json()
-                output[subreddit][coin] = resp
+    shift = datetime.timedelta(days=1)
+    start = datetime.datetime.utcnow() - datetime.timedelta(days=24) - shift
+    end = datetime.datetime.utcnow() - shift
 
-    with open('web_summary.json', 'w') as fp:
-        json.dump(output, fp)
+    params_daily = {
+        'start': start.strftime("%Y-%m-%d %H:%M:%S"),
+        'end': end.strftime("%Y-%m-%d %H:%M:%S"),
+        'ups': 0,
+        'submissions': True,
+        'comments': True,
+        'granularity': 'D'
+    }
+
+    files = ['web_data_hourly.json', 'web_data_daily.json']
+    requests_params = [params_hourly, params_daily]
+
+    for params, file in zip(requests_params, files):
+
+        output = {}
+        with client:
+            subs_and_coins = client.get('/subs_and_coins').json()
+            for subreddit in subs_and_coins['subreddits']:
+                output[subreddit] = {}
+                for coin in subs_and_coins['coins']:
+                    output[subreddit][coin] = {}
+                    resp = client.get(
+                        f'/volume/{subreddit}/{coin}',
+                        params=params
+                    ).json()
+                    output[subreddit][coin] = resp
+
+        with open(file, 'w') as fp:
+            json.dump(output, fp)
 
 
 if __name__ == '__main__':
@@ -49,8 +72,9 @@ if __name__ == '__main__':
         make_web_data(client)
     except Exception as e:
         print(e)
-        with open('web_summary.json', 'w') as fp:
-            json.dump({'info': 'data not ready'}, fp)
+        for file in ['web_data_hourly.json', 'web_data_daily.json']:
+            with open(file, 'w') as fp:
+                json.dump({'info': 'data not ready'}, fp)
 
     # TODO: while loop is a waste of compute power
     #  must move this to cron inside the docker

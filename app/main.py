@@ -169,9 +169,15 @@ async def vol(
 # this endpoint is purely to decrease the load
 # on db and have a ready to output summary for web
 # for details see make_web_data.py
-@app.get('/volume/market_summary', tags=['volume'])
-async def volume_market_summary():
-    with open('web_summary.json') as json_file:
+@app.get('/volume/market_summary', tags=['volume'], include_in_schema=False)
+async def volume_market_summary(
+        gran: str = Query(
+            ...,
+            title='granularity',
+            regex=f'{"|".join(["daily", "hourly"])}'
+        ),
+):
+    with open(f'web_data_{gran}.json') as json_file:
         data = json.load(json_file)
     return data
 
