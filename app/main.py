@@ -43,6 +43,18 @@ tags_metadata = [
 
 
 app = FastAPI(
+    # tricky part here with root_path.
+    # more info here:
+    # https://fastapi.tiangolo.com/advanced/behind-a-proxy/
+    # the thing is, we need this api to be https.
+    # so nginx server will proxy_pass cryptocoins.app/api
+    # to this fastapi service. But unforch, the /docs
+    # will look for openapi.json in root instead of
+    # /api/openapi.json this causes confusion and errors.
+    # hence the root_path /api. With this the docs
+    # are accessible only through the proxy, but not
+    # directly, say 0.0.0.0/docs. Crap this is complicated.
+    root_path='/api',
     title='Reddit coins',
     description='Get coin mention counts / sentiment from reddit subs',
     version='0.0.1',
