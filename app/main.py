@@ -2,13 +2,16 @@
 https://pydantic-docs.helpmanual.io/usage/schema/#schema-customization
 '''
 
-from fastapi import FastAPI, Query, Path
+from fastapi import FastAPI, Query, Path, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from fastapi.encoders import jsonable_encoder
+from pydantic import BaseModel, validator, ValidationError
 from typing import List, Optional
 from database import database
 from db_interactions import get_mention_timeseries, gran_
 import json
+import datetime
+import pandas as pd
 
 coins = [
     'ALGO', 'DASH', 'OXT', 'ATOM', 'KNC', 'XRP', 'REP', 'MKR', 'CGLD',
@@ -42,12 +45,41 @@ tags_metadata = [
 ]
 
 
+# add validators to validate time inputs
+# and prevent using too distant dates
+# both back in time and further in time :D
+# this is to prevent unnecessary load in db.
+class EndTimeValidator(BaseModel):
+    end: str
+
+    @validator('end')
+    def validate_end_time(cls, end):
+        # using pandas to infer date string format
+        # other libs require me to specify this
+        # not sure of the format the user will give
+        if pd.to_datetime(end) > datetime.datetime.utcnow():
+            raise ValueError('Invalid end date. '
+                             'End date can not be later than current UTC time.')
+        return end
+
+
+class StartTimeValidator(BaseModel):
+    start: str
+
+    @validator('start')
+    def validate_end_time(cls, start):
+        if pd.to_datetime(start) < pd.to_datetime('2021-01-01'):
+            raise ValueError('Invalid start date. '
+                             'Try a date >= 2021-01-01')
+        return start
+
+
 app = FastAPI(
     # tricky part here with root_path.
     # more info here:
     # https://fastapi.tiangolo.com/advanced/behind-a-proxy/
     # the thing is, we need this api to be https.
-    # so nginx server will proxy_pass cryptocoins.app/api
+    # so nginx server will proxy_pass redditcoins.app/api
     # to this fastapi service. But unforch, the /docs
     # will look for openapi.json in root instead of
     # /api/openapi.json this causes confusion and errors.
@@ -154,6 +186,12 @@ async def vol(
     #  so limit this to say 200 by shifting end
     #  to earlier date / shifting start to later
 
+    try:
+        StartTimeValidator(start=start, end=end)
+        EndTimeValidator(start=start, end=end)
+    except ValidationError as err:
+        raise HTTPException(status_code=422, detail=jsonable_encoder(err.errors()))
+
     df = await get_mention_timeseries(
         # okay, why do we need this NONE thing?
         # the thing is, we want to be able to get the
@@ -194,6 +232,6 @@ async def volume_market_summary(
     return data
 
 
-@app.get('/sentiment/{subreddit}/{coin}', tags=['sentiment'])
+@app.get('/sentiment/{subreddit}/{coin}', tags=['sentiment'], include_in_schema=False)
 async def sentiment():
     pass
