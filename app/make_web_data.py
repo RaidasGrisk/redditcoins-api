@@ -21,7 +21,7 @@ def make_web_data(client) -> None:
     params_hourly = {
         'start': start.strftime("%Y-%m-%d %H:%M:%S"),
         'end': end.strftime("%Y-%m-%d %H:%M:%S"),
-        'ups': 0,
+        'ups': -100,
         'submissions': True,
         'comments': True,
         'granularity': 'H'
@@ -34,7 +34,7 @@ def make_web_data(client) -> None:
     params_daily = {
         'start': start.strftime("%Y-%m-%d %H:%M:%S"),
         'end': end.strftime("%Y-%m-%d %H:%M:%S"),
-        'ups': 0,
+        'ups': -100,
         'submissions': True,
         'comments': True,
         'granularity': 'D'
