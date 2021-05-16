@@ -20,7 +20,7 @@ coins = [
     'LINK', 'BTC', 'BAL', 'LTC', 'ETH', 'BCH', 'ETC', 'USDC', 'ZEC',
     'XTZ', 'DAI', 'WBTC', 'NU', 'FIL', 'AAVE', 'SNX', 'BNT', 'GRT',
     'SUSHI', 'MATIC', 'ADA', 'ANKR', 'CRV', 'STORJ', 'SKL', '1INCH',
-    'ENJ', 'NKN', 'OGN', 'DOGE', 'DOT', 'NEO', 'CEL', 'NANO', 'IOTA'
+    'ENJ', 'NKN', 'OGN', 'DOGE', 'DOT', 'NEO', 'CEL', 'NANO', 'IOTA',
     'XMR', 'USDT', 'BNB', 'NEM', 'TRON', 'BTG', 'VET', 'SHIB', 'ICP',
     'MIR', 'RLC', 'FORTH', 'TRB', 'CTSI', 'XMR'
 ]
