@@ -22,7 +22,7 @@ coins = [
     'SUSHI', 'MATIC', 'ADA', 'ANKR', 'CRV', 'STORJ', 'SKL', '1INCH',
     'ENJ', 'NKN', 'OGN', 'DOGE', 'DOT', 'NEO', 'CEL', 'NANO', 'IOTA',
     'XMR', 'USDT', 'BNB', 'NEM', 'TRON', 'BTG', 'VET', 'SHIB', 'ICP',
-    'MIR', 'RLC', 'FORTH', 'TRB', 'CTSI', 'XMR'
+    'MIR', 'RLC', 'FORTH', 'TRB', 'CTSI', 'XMR', 'LTO'
 ]
 
 db_metadata = {
