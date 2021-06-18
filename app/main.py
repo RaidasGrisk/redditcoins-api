@@ -23,8 +23,8 @@ coins = [
     'ENJ', 'NKN', 'OGN', 'DOGE', 'DOT', 'NEO', 'CEL', 'NANO', 'IOTA',
     'XMR', 'USDT', 'BNB', 'NEM', 'TRON', 'BTG', 'VET', 'SHIB', 'ICP',
     'MIR', 'RLC', 'FORTH', 'TRB', 'CTSI', 'LTO', 'SOL', 'MOON',
-    'THETA', 'KSM', 'CAKE', 'KLAY',
-]  # 'MLN', 'AMP', 'GTC' are in the topics and db, but not here
+    'THETA', 'KSM', 'CAKE', 'KLAY', 'AMP', 'ERG'
+]
 
 db_metadata = {
     'subreddits': ['cryptocurrency', 'satoshistreetbets'],
