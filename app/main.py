@@ -23,7 +23,7 @@ coins = [
     'ENJ', 'NKN', 'OGN', 'DOGE', 'DOT', 'NEO', 'CEL', 'NANO', 'IOTA',
     'XMR', 'USDT', 'BNB', 'NEM', 'TRON', 'BTG', 'VET', 'SHIB', 'ICP',
     'MIR', 'RLC', 'FORTH', 'TRB', 'CTSI', 'LTO', 'SOL', 'MOON', 'AVAX'
-    'THETA', 'KSM', 'CAKE', 'KLAY', 'AMP', 'ERG', 'FTM', 'LUNA',
+    'THETA', 'KSM', 'CAKE', 'KLAY', 'AMP', 'ERG', 'FTM', 'LUNA', 'ONE',
 ]
 
 db_metadata = {
