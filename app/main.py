@@ -22,8 +22,8 @@ coins = [
     'SUSHI', 'MATIC', 'ADA', 'ANKR', 'CRV', 'STORJ', 'SKL', '1INCH',
     'ENJ', 'NKN', 'OGN', 'DOGE', 'DOT', 'NEO', 'CEL', 'NANO', 'IOTA',
     'XMR', 'USDT', 'BNB', 'NEM', 'TRON', 'BTG', 'VET', 'SHIB', 'ICP',
-    'MIR', 'RLC', 'FORTH', 'TRB', 'CTSI', 'LTO', 'SOL', 'MOON',
-    'THETA', 'KSM', 'CAKE', 'KLAY', 'AMP', 'ERG'
+    'MIR', 'RLC', 'FORTH', 'TRB', 'CTSI', 'LTO', 'SOL', 'MOON', 'AVAX'
+    'THETA', 'KSM', 'CAKE', 'KLAY', 'AMP', 'ERG', 'FTM', 'LUNA',
 ]
 
 db_metadata = {
