@@ -24,6 +24,7 @@ coins = [
     'XMR', 'USDT', 'BNB', 'NEM', 'TRON', 'BTG', 'VET', 'SHIB', 'ICP',
     'MIR', 'RLC', 'FORTH', 'TRB', 'CTSI', 'LTO', 'SOL', 'MOON', 'AVAX',
     'THETA', 'KSM', 'CAKE', 'KLAY', 'AMP', 'ERG', 'FTM', 'LUNA', 'ONE',
+    'CKB', 'CRO', 'QNT'
 ]
 
 db_metadata = {
