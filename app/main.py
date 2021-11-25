@@ -13,22 +13,9 @@ import json
 import datetime
 import pandas as pd
 
-coins = [
-    'ALGO', 'DASH', 'OXT', 'ATOM', 'KNC', 'XRP', 'REP', 'MKR', 'CGLD',
-    'COMP', 'NMR', 'OMG', 'BAND', 'UMA', 'XLM', 'EOS', 'ZRX', 'BAT',
-    'LOOM', 'UNI', 'YFI', 'LRC', 'CVC', 'DNT', 'MANA', 'GNT', 'REN',
-    'LINK', 'BTC', 'BAL', 'LTC', 'ETH', 'BCH', 'ETC', 'USDC', 'ZEC',
-    'XTZ', 'DAI', 'WBTC', 'NU', 'FIL', 'AAVE', 'SNX', 'BNT', 'GRT',
-    'SUSHI', 'MATIC', 'ADA', 'ANKR', 'CRV', 'STORJ', 'SKL', '1INCH',
-    'ENJ', 'NKN', 'OGN', 'DOGE', 'DOT', 'NEO', 'CEL', 'NANO', 'IOTA',
-    'XMR', 'USDT', 'BNB', 'NEM', 'TRON', 'BTG', 'VET', 'SHIB', 'ICP',
-    'MIR', 'RLC', 'FORTH', 'TRB', 'CTSI', 'LTO', 'SOL', 'MOON', 'AVAX',
-    'THETA', 'KSM', 'CAKE', 'KLAY', 'AMP', 'ERG', 'FTM', 'LUNA', 'ONE',
-]
 
 db_metadata = {
-    'subreddits': ['cryptocurrency', 'satoshistreetbets'],
-    'coins': coins
+    'subreddits': ['cryptocurrency', 'satoshistreetbets']
 }
 
 tags_metadata = [
@@ -122,8 +109,13 @@ def ping():
 
 
 @app.get('/subs_and_coins', tags=['info'])
-def get_subs_and_coins():
-    return db_metadata
+async def get_subs_and_coins():
+    sql = f"""
+    SELECT DISTINCT topic FROM cryptocurrency_
+    """
+    coins = await database.fetch_all(sql)
+    coins_ = [coin['topic'] for coin in coins]
+    return coins_
 
 
 # the output data model example and validator
