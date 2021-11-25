@@ -115,7 +115,8 @@ async def get_subs_and_coins():
     """
     coins = await database.fetch_all(sql)
     coins_ = [coin['topic'] for coin in coins]
-    return coins_
+    db_metadata['coins'] = coins_
+    return db_metadata
 
 
 # the output data model example and validator
