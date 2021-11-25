@@ -13,19 +13,6 @@ import json
 import datetime
 import pandas as pd
 
-coins = [
-    'ALGO', 'DASH', 'OXT', 'ATOM', 'KNC', 'XRP', 'REP', 'MKR', 'CGLD',
-    'COMP', 'NMR', 'OMG', 'BAND', 'UMA', 'XLM', 'EOS', 'ZRX', 'BAT',
-    'LOOM', 'UNI', 'YFI', 'LRC', 'CVC', 'DNT', 'MANA', 'GNT', 'REN',
-    'LINK', 'BTC', 'BAL', 'LTC', 'ETH', 'BCH', 'ETC', 'USDC', 'ZEC',
-    'XTZ', 'DAI', 'WBTC', 'NU', 'FIL', 'AAVE', 'SNX', 'BNT', 'GRT',
-    'SUSHI', 'MATIC', 'ADA', 'ANKR', 'CRV', 'STORJ', 'SKL', '1INCH',
-    'ENJ', 'NKN', 'OGN', 'DOGE', 'DOT', 'NEO', 'CEL', 'NANO', 'IOTA',
-    'XMR', 'USDT', 'BNB', 'NEM', 'TRON', 'BTG', 'VET', 'SHIB', 'ICP',
-    'MIR', 'RLC', 'FORTH', 'TRB', 'CTSI', 'LTO', 'SOL', 'MOON', 'AVAX',
-    'THETA', 'KSM', 'CAKE', 'KLAY', 'AMP', 'ERG', 'FTM', 'LUNA', 'ONE',
-    'CKB', 'CRO', 'QNT'
-]
 
 db_metadata = {
     'subreddits': ['cryptocurrency', 'satoshistreetbets']
