@@ -4,6 +4,12 @@ TODO:
 2. Work on limiting the query results
 3. Think of better db structure to lower compute cost
 
+TODO: Add a non public endpoint to get comments by topic:
+SELECT B._id, B.body
+FROM cryptocurrency_ A
+INNER JOIN cryptocurrency B ON LEFT(A._id, 7) = B._id 
+WHERE A.created_time > '2022-10-01 00:00:00' AND 
+A.topic = 'LRC'
 '''
 
 import pandas as pd
