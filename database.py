@@ -17,9 +17,8 @@ def test():
     async def fetch():
         await database.connect()
         print(await database.fetch_all(
-            "SELECT * FROM satoshistreetbets_ LIMIT 1"
+            "SELECT * FROM cryptocurrency_ LIMIT 1"
         ))
         await database.disconnect()
 
     print(asyncio.run(fetch()))
-

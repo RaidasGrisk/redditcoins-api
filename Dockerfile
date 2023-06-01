@@ -1,9 +1,11 @@
-FROM tiangolo/uvicorn-gunicorn-fastapi:python3.8
+# docker build -t eu.gcr.io/reddit-app/api -f Dockerfile .
+# docker run -t -p 80:80 --network host eu.gcr.io/reddit-app/api
+# docker push eu.gcr.io/reddit-app/api
+# gcloud run deploy --image eu.gcr.io/reddit-app/api --port 80
 
-COPY ./app /app
-RUN pip install -r requirements.txt
-
-# making this background py script run was way too hard
-# lets not run this as a background tas or as cron
-# simply add it to prestart.sh
-RUN echo "python3 /app/make_web_data.py &" >> prestart.sh
+FROM python:3.11
+WORKDIR /code
+COPY ./requirements.txt /code/requirements.txt
+RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
+COPY ./ /code
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "80"]
