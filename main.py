@@ -99,11 +99,11 @@ async def vol(
         ),
         start: str = Query(
             ...,
-            description='e.g. 2023-01-01 00:00:00'
+            description='e.g. 2023-01-01 00:00:00 (%Y-%m-%d %H:%M:%S)'
         ),
         end: str = Query(
             ...,
-            description='e.g. 2023-02-01 00:00:00'
+            description='e.g. 2023-02-01 00:00:00 (%Y-%m-%d %H:%M:%S)'
         ),
         granularity: str = Query(
             'day',
@@ -159,9 +159,20 @@ async def volume_market_summary(
             regex=f'{"|".join(["daily", "hourly"])}'
         ),
 ):
-    with open(f'web_data_{gran}.json') as json_file:
-        data = json.load(json_file)
-    return data
+    time_format = '%Y-%m-%d %H:%M:%S'
+    query = f""" SELECT * from {gran}_data """
+
+    data = await database.fetch_all(query=query)
+    data_ = {}
+    for row in data:
+        coin, date, count = row.values()
+        data_.setdefault(coin, [])
+        data_[coin].append({
+            'time': date.strftime(time_format),
+            'volume': count
+        })
+
+    return data_
 
 
 @app.get('/sentiment/{coin}', tags=['sentiment'])
