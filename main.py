@@ -3,7 +3,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel
 from typing import List
-import json
 import datetime
 from database import database
 
@@ -24,7 +23,7 @@ tags_metadata = [
 
 
 # limit timespan to prevent huge db load
-def validate_time(start, end):
+def validate_time(start, end, granularity):
     time_format = '%Y-%m-%d %H:%M:%S'
     start_ = datetime.datetime.strptime(start, time_format).replace(tzinfo=datetime.timezone.utc).timestamp()
     end_ = datetime.datetime.strptime(end, time_format).replace(tzinfo=datetime.timezone.utc).timestamp()
@@ -34,8 +33,16 @@ def validate_time(start, end):
         raise ValueError('Invalid end date. End date cannot be later than the current UTC time.')
     if start_ > end_:
         raise ValueError('Invalid dates.')
-    if difference > (2592000 * 12):  # 12 months
+
+    # Not very convenient. Different allowed time span for different granularity.
+    if granularity == 'hour' and difference > (2592000 * 1):  # 1 month
+        raise ValueError('Difference between start and end is too long. Max is 1 month.')
+    if granularity == 'day' and difference > (2592000 * 12):  # 12 months
         raise ValueError('Difference between start and end is too long. Max is 12 months.')
+    if granularity == 'week' and difference > (2592000 * 12 * 5):  # 5 years
+        raise ValueError('Difference between start and end is too long. Max is 5 years.')
+    if granularity == 'month' and difference > (2592000 * 12 * 5):  # 5 years
+        raise ValueError('Difference between start and end is too long. Max is 5 years.')
 
 
 app = FastAPI(
@@ -113,7 +120,7 @@ async def vol(
 ) -> dict:
 
     try:
-        validate_time(start=start, end=end)
+        validate_time(start=start, end=end, granularity=granularity)
     except ValueError as err:
         raise HTTPException(status_code=422, detail=jsonable_encoder({'error': str(err)}))
 
@@ -148,10 +155,9 @@ async def vol(
     return {'data': data_}
 
 
-# this endpoint is purely to decrease the load
-# on db and have a ready to output summary for web
-# for details see make_web_data.py
-@app.get('/volume/market_summary', tags=['volume'], include_in_schema=False)
+# this endpoint is purely to decrease the load on db
+# and have a ready to output summary for web app
+@app.get('/volume_market_summary', tags=['volume'], include_in_schema=False)
 async def volume_market_summary(
         gran: str = Query(
             ...,
