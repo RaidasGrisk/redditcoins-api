@@ -5,6 +5,9 @@ from pydantic import BaseModel
 from typing import List
 import datetime
 from database import database
+from api_analytics.fastapi import Analytics
+from dotenv import load_dotenv
+import os
 
 tags_metadata = [
     {
@@ -48,7 +51,7 @@ def validate_time(start, end, granularity):
 app = FastAPI(
     title='redditcoins.app',
     description='r/cryptocurrency coin mentions',
-    openapi_tags=tags_metadata
+    openapi_tags=tags_metadata,
 )
 
 app.add_middleware(
@@ -58,6 +61,9 @@ app.add_middleware(
     allow_methods=['*'],
     allow_headers=['*'],
 )
+
+load_dotenv()
+app.add_middleware(Analytics, api_key=os.getenv('API_KEY'))
 
 
 @app.on_event('startup')
