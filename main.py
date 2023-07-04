@@ -52,6 +52,7 @@ app = FastAPI(
     title='redditcoins.app',
     description='r/cryptocurrency coin mentions',
     openapi_tags=tags_metadata,
+    swagger_ui_parameters={'defaultModelsExpandDepth': -1}
 )
 
 app.add_middleware(
